@@ -1,0 +1,90 @@
+# ResNet50 Transfer Learning Configuration
+# Using pretrained ResNet50 with fine-tuning
+
+model:
+  name: "resnet50_transfer"
+  architecture: "resnet50"
+  pretrained: true
+  pretrained_weights: "IMAGENET1K_V2"  # Latest ImageNet weights
+
+  # Fine-tuning strategy
+  freeze_backbone: true  # Initially freeze, then unfreeze gradually
+  unfreeze_after_epoch: 10  # Unfreeze backbone after N epochs
+
+  # Modification to original architecture
+  replace_final_layer: true
+  num_classes: 7
+  dropout_rate: 0.5
+
+  # Additional layers on top of ResNet
+  additional_layers:
+    - type: "dropout"
+      rate: 0.5
+    - type: "linear"
+      units: 512
+    - type: "relu"
+    - type: "dropout"
+      rate: 0.3
+    - type: "linear"
+      units: 7  # num_classes
+
+# Training specific to this model
+training:
+  epochs: 80
+  batch_size: 32  # Smaller batch for larger model
+
+  # Two-stage training
+  stage1:  # Frozen backbone
+    epochs: 10
+    learning_rate: 0.001
+    optimizer: "adam"
+
+  stage2:  # Unfrozen backbone (fine-tuning)
+    epochs: 70
+    learning_rate: 0.0001  # Lower LR for fine-tuning
+    optimizer: "adamw"
+    weight_decay: 0.01
+
+  # Learning rate scheduler
+  scheduler:
+    type: "cosine"
+    t_max: 80
+    eta_min: 0.000001
+
+  # Loss
+  loss:
+    type: "label_smoothing"
+    smoothing: 0.1
+
+  # Early stopping
+  early_stopping:
+    patience: 20
+    min_delta: 0.0001
+
+  # Mixed precision for faster training
+  mixed_precision: true
+
+  # Gradient clipping
+  gradient_clipping:
+    enabled: true
+    max_norm: 1.0
+
+# Data augmentation (more aggressive for transfer learning)
+data:
+  augmentation:
+    enabled: true
+    random_horizontal_flip: 0.5
+    random_rotation: 20
+    brightness: 0.3
+    contrast: 0.3
+    random_crop: true
+    random_affine: true
+    color_jitter: 0.2
+    gaussian_blur: 0.1
+
+# Expected performance (update after training)
+expected_performance:
+  train_accuracy: null
+  val_accuracy: null
+  test_accuracy: null
+  notes: "Transfer learning should outperform baseline"

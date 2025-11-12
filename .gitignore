@@ -1,0 +1,110 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual Environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# PyCharm
+.idea/
+
+# VSCode
+.vscode/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# Data
+data/raw/
+data/processed/
+data/augmented/
+*.csv
+*.zip
+*.tar.gz
+
+# Models & Checkpoints
+models/checkpoints/*.pth
+models/checkpoints/*.pt
+models/final/*.pth
+models/final/*.pt
+*.h5
+*.pkl
+*.joblib
+
+# Experiments & Logs
+experiments/runs/
+logs/
+wandb/
+mlruns/
+*.log
+
+# Results
+results/plots/*.png
+results/plots/*.jpg
+results/metrics/*.json
+results/confusion_matrices/
+
+# Environment variables
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Documentation
+docs/_build/
+site/
+
+# Temporary files
+*.tmp
+temp/
+tmp/
+
+# Large files (keep examples only)
+*.onnx
+*.tflite
+*.pb
+
+# Kaggle
+kaggle.json
+
+# IDE
+*.sublime-project
+*.sublime-workspace
