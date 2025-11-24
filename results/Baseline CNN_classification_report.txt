@@ -1,0 +1,15 @@
+Classification Report - Baseline CNN
+======================================================================
+              precision    recall  f1-score   support
+
+       angry      0.526     0.493     0.509       592
+     disgust      0.843     0.796     0.818       592
+        fear      0.470     0.399     0.431       592
+       happy      0.852     0.846     0.849      1140
+     neutral      0.595     0.673     0.632       817
+         sad      0.467     0.554     0.507       653
+    surprise      0.755     0.677     0.714       592
+
+    accuracy                          0.658      4978
+   macro avg      0.644     0.634     0.637      4978
+weighted avg      0.662     0.658     0.659      4978

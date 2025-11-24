@@ -1,0 +1,19 @@
+FACIAL EMOTION RECOGNITION - EDA SUMMARY
+======================================================================
+
+DATASET OVERVIEW:
+----------------------------------------------------------------------
+Total Images: 49,779
+Number of Classes: 7
+Classes: angry, disgust, fear, happy, neutral, sad, surprise
+
+
+CLASS DISTRIBUTION:
+----------------------------------------------------------------------
+angry       : 5,920 (11.89%)
+disgust     : 5,920 (11.89%)
+fear        : 5,920 (11.89%)
+happy       : 11,398 (22.90%)
+neutral     : 8,166 (16.40%)
+sad         : 6,535 (13.13%)
+surprise    : 5,920 (11.89%)
