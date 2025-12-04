@@ -1,0 +1,298 @@
+"""
+File organizer for copying/moving images to split directories.
+"""
+
+import shutil
+from pathlib import Path
+from typing import Literal, Optional
+import pandas as pd
+from tqdm import tqdm
+
+
+class FileOrganizer:
+    """
+    Organizes files into train/val/test split directories.
+    
+    Handles:
+    - Copying or moving files to split directories
+    - Creating necessary subdirectories
+    - Error handling and logging
+    - Verification of file counts
+    """
+    
+    def __init__(
+        self,
+        output_dir: str,
+        operation: Literal['copy', 'move'] = 'copy',
+        create_dirs: bool = True
+    ):
+        """
+        Initialize the file organizer.
+        
+        Args:
+            output_dir: Root directory for processed data (e.g., 'data/processed')
+            operation: File operation - 'copy' or 'move' (default: 'copy')
+            create_dirs: Automatically create directories if needed (default: True)
+        """
+        self.output_dir = Path(output_dir)
+        self.operation = operation
+        self.create_dirs = create_dirs
+        
+        # Statistics
+        self.stats = {
+            'train': {'success': 0, 'failed': 0, 'errors': []},
+            'val': {'success': 0, 'failed': 0, 'errors': []},
+            'test': {'success': 0, 'failed': 0, 'errors': []}
+        }
+    
+    def organize_splits(
+        self,
+        train_df: pd.DataFrame,
+        val_df: pd.DataFrame,
+        test_df: pd.DataFrame,
+        path_column: str = 'path',
+        label_column: str = 'emotion'
+    ) -> None:
+        """
+        Organize files into train/val/test directories.
+        
+        Args:
+            train_df: DataFrame with training image paths
+            val_df: DataFrame with validation image paths
+            test_df: DataFrame with test image paths
+            path_column: Column name containing file paths (default: 'path')
+            label_column: Column name containing labels/emotions (default: 'emotion')
+        """
+        print(f"Organizing files into: {self.output_dir}")
+        print(f"Operation: {self.operation}")
+        
+        # Process each split
+        self._process_split(train_df, 'train', path_column, label_column)
+        self._process_split(val_df, 'val', path_column, label_column)
+        self._process_split(test_df, 'test', path_column, label_column)
+        
+        # Print summary
+        self._print_summary()
+    
+    def _process_split(
+        self,
+        df: pd.DataFrame,
+        split_name: str,
+        path_column: str,
+        label_column: str
+    ) -> None:
+        """
+        Process files for a single split.
+        
+        Args:
+            df: DataFrame with image information
+            split_name: Name of the split ('train', 'val', or 'test')
+            path_column: Column name containing file paths
+            label_column: Column name containing labels
+        """
+        print(f"\n{'='*60}")
+        print(f"Processing {split_name.upper()} set: {len(df):,} images")
+        print(f"{'='*60}")
+        
+        # Create split directory
+        split_dir = self.output_dir / split_name
+        if self.create_dirs:
+            split_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Process each file
+        for idx, row in tqdm(df.iterrows(), total=len(df), desc=f"{split_name}"):
+            try:
+                src_path = Path(row[path_column])
+                label = row[label_column]
+                
+                # Create label subdirectory if needed
+                label_dir = split_dir / label
+                if self.create_dirs:
+                    label_dir.mkdir(parents=True, exist_ok=True)
+                
+                # Destination path
+                dst_path = label_dir / src_path.name
+                
+                # Check if source exists
+                if not src_path.exists():
+                    raise FileNotFoundError(f"Source file not found: {src_path}")
+                
+                # Perform operation
+                if self.operation == 'copy':
+                    shutil.copy2(src_path, dst_path)
+                elif self.operation == 'move':
+                    shutil.move(str(src_path), str(dst_path))
+                else:
+                    raise ValueError(f"Invalid operation: {self.operation}")
+                
+                self.stats[split_name]['success'] += 1
+                
+            except Exception as e:
+                self.stats[split_name]['failed'] += 1
+                self.stats[split_name]['errors'].append({
+                    'index': idx,
+                    'path': str(row[path_column]),
+                    'error': str(e)
+                })
+                print(f"\n❌ Error processing {row[path_column]}: {e}")
+    
+    def _print_summary(self) -> None:
+        """Print summary of file organization."""
+        print(f"\n{'='*60}")
+        print("ORGANIZATION SUMMARY")
+        print(f"{'='*60}")
+        
+        total_success = 0
+        total_failed = 0
+        
+        for split_name, stats in self.stats.items():
+            print(f"\n{split_name.upper()}:")
+            print(f"  ✅ Success: {stats['success']:,}")
+            print(f"  ❌ Failed:  {stats['failed']:,}")
+            
+            total_success += stats['success']
+            total_failed += stats['failed']
+            
+            if stats['errors']:
+                print(f"  Errors ({len(stats['errors'])}):")
+                for error in stats['errors'][:5]:  # Show first 5 errors
+                    print(f"    - {error['path']}: {error['error']}")
+                if len(stats['errors']) > 5:
+                    print(f"    ... and {len(stats['errors']) - 5} more")
+        
+        print(f"\n{'='*60}")
+        print(f"TOTAL: {total_success:,} successful, {total_failed:,} failed")
+        print(f"{'='*60}")
+        
+        if total_failed == 0:
+            print("\n✅ All files organized successfully!")
+        else:
+            print(f"\n⚠️  Warning: {total_failed} files failed to organize")
+    
+    def verify_file_counts(
+        self,
+        emotions: Optional[list] = None
+    ) -> pd.DataFrame:
+        """
+        Verify file counts in organized directories.
+        
+        Args:
+            emotions: List of emotion class names to check
+                     If None, will auto-detect from directories
+            
+        Returns:
+            DataFrame with file counts per split and emotion
+        """
+        print(f"\nVerifying file counts in: {self.output_dir}")
+        
+        splits = ['train', 'val', 'test']
+        
+        # Auto-detect emotions if not provided
+        if emotions is None:
+            train_dir = self.output_dir / 'train'
+            if train_dir.exists():
+                emotions = sorted([d.name for d in train_dir.iterdir() if d.is_dir()])
+            else:
+                raise ValueError("Cannot auto-detect emotions. Provide emotions list.")
+        
+        # Count files
+        counts = {}
+        for split in splits:
+            split_dir = self.output_dir / split
+            if not split_dir.exists():
+                print(f"⚠️  Warning: {split} directory not found")
+                counts[split] = {emotion: 0 for emotion in emotions}
+                continue
+            
+            counts[split] = {}
+            for emotion in emotions:
+                emotion_dir = split_dir / emotion
+                if emotion_dir.exists():
+                    file_count = len(list(emotion_dir.glob('*.*')))
+                    counts[split][emotion] = file_count
+                else:
+                    counts[split][emotion] = 0
+        
+        # Create DataFrame
+        df = pd.DataFrame(counts)
+        df['total'] = df.sum(axis=1)
+        
+        # Add row totals
+        df.loc['TOTAL'] = df.sum()
+        
+        print("\n📊 File Count Verification:")
+        print(df)
+        
+        return df
+    
+    def get_directory_structure(self) -> dict:
+        """
+        Get the directory structure of organized files.
+        
+        Returns:
+            Dictionary representing the directory tree
+        """
+        structure = {}
+        
+        for split in ['train', 'val', 'test']:
+            split_dir = self.output_dir / split
+            structure[split] = {}
+            
+            if split_dir.exists():
+                for emotion_dir in sorted(split_dir.iterdir()):
+                    if emotion_dir.is_dir():
+                        file_count = len(list(emotion_dir.glob('*.*')))
+                        structure[split][emotion_dir.name] = {
+                            'path': str(emotion_dir),
+                            'count': file_count
+                        }
+        
+        return structure
+    
+    def cleanup_empty_directories(self) -> None:
+        """Remove empty directories in the output structure."""
+        print(f"\nCleaning up empty directories in: {self.output_dir}")
+        
+        removed = 0
+        for split in ['train', 'val', 'test']:
+            split_dir = self.output_dir / split
+            if split_dir.exists():
+                for emotion_dir in split_dir.iterdir():
+                    if emotion_dir.is_dir() and not any(emotion_dir.iterdir()):
+                        emotion_dir.rmdir()
+                        removed += 1
+                        print(f"  Removed empty: {emotion_dir}")
+        
+        if removed == 0:
+            print("  No empty directories found")
+        else:
+            print(f"\n✅ Removed {removed} empty directories")
+
+
+if __name__ == '__main__':
+    # Example usage
+    import pandas as pd
+    
+    # Load split DataFrames
+    train_df = pd.read_csv('results/metrics/train_split.csv')
+    val_df = pd.read_csv('results/metrics/val_split.csv')
+    test_df = pd.read_csv('results/metrics/test_split.csv')
+    
+    # Initialize organizer
+    organizer = FileOrganizer(
+        output_dir='data/processed',
+        operation='copy',  # Use 'move' if you want to move files
+        create_dirs=True
+    )
+    
+    # Organize files
+    organizer.organize_splits(train_df, val_df, test_df)
+    
+    # Verify counts
+    emotions = ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise']
+    counts_df = organizer.verify_file_counts(emotions)
+    
+    # Get structure
+    structure = organizer.get_directory_structure()
+    print("\n📁 Directory Structure:")
+    print(structure)

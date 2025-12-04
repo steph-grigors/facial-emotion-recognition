@@ -1,0 +1,220 @@
+"""
+Project structure manager for creating and verifying directory hierarchy.
+"""
+
+import os
+from pathlib import Path
+from typing import List, Optional
+import yaml
+
+
+class ProjectStructureManager:
+    """
+    Manages the creation and verification of project directory structure.
+    
+    Creates the standard directory hierarchy for a deep learning project:
+    - data/ (raw, processed, augmented)
+    - models/ (checkpoints, final)
+    - results/ (plots, metrics, confusion_matrices, reports)
+    - configs/ (model_configs, training_configs)
+    - logs/
+    - experiments/runs/
+    """
+    
+    def __init__(self, root_dir: str = "."):
+        """
+        Initialize the structure manager.
+        
+        Args:
+            root_dir: Root directory of the project (default: current directory)
+        """
+        self.root_dir = Path(root_dir).resolve()
+        
+        # Define directory structure
+        self.structure = {
+            'data': ['raw', 'processed', 'augmented'],
+            'models': ['checkpoints', 'final'],
+            'results': ['plots', 'metrics', 'confusion_matrices', 'reports'],
+            'configs': ['model_configs', 'training_configs'],
+            'logs': [],
+            'experiments': ['runs'],
+            'notebooks': ['results'],
+            'src': ['data', 'models', 'training', 'inference', 'utils'],
+            'scripts': [],
+            'tests': [],
+        }
+        
+        # Define split subdirectories for processed data
+        self.splits = ['train', 'val', 'test']
+        
+    def create_structure(self, emotions: Optional[List[str]] = None) -> None:
+        """
+        Create the complete project directory structure.
+        
+        Args:
+            emotions: List of emotion class names to create subdirectories
+                     (e.g., ['angry', 'happy', 'sad'])
+        """
+        print(f"Creating project structure in: {self.root_dir}")
+        
+        # Create main directories
+        for parent, subdirs in self.structure.items():
+            parent_path = self.root_dir / parent
+            parent_path.mkdir(parents=True, exist_ok=True)
+            print(f"✓ Created: {parent}")
+            
+            # Create subdirectories
+            for subdir in subdirs:
+                subdir_path = parent_path / subdir
+                subdir_path.mkdir(parents=True, exist_ok=True)
+                print(f"  ✓ Created: {parent}/{subdir}")
+        
+        # Create split directories with emotion subdirectories
+        if emotions:
+            self._create_split_structure(emotions)
+        
+        # Create __init__.py files for Python packages
+        self._create_init_files()
+        
+        print("\n✅ Project structure created successfully!")
+        
+    def _create_split_structure(self, emotions: List[str]) -> None:
+        """
+        Create train/val/test split directories with emotion subdirectories.
+        
+        Args:
+            emotions: List of emotion class names
+        """
+        processed_dir = self.root_dir / 'data' / 'processed'
+        
+        for split in self.splits:
+            split_path = processed_dir / split
+            split_path.mkdir(parents=True, exist_ok=True)
+            print(f"  ✓ Created: data/processed/{split}")
+            
+            # Create emotion subdirectories
+            for emotion in emotions:
+                emotion_path = split_path / emotion
+                emotion_path.mkdir(parents=True, exist_ok=True)
+                
+    def _create_init_files(self) -> None:
+        """Create __init__.py files for Python packages."""
+        src_dir = self.root_dir / 'src'
+        
+        # Create __init__.py in src and all subdirectories
+        (src_dir / '__init__.py').touch(exist_ok=True)
+        
+        for subdir in self.structure['src']:
+            init_file = src_dir / subdir / '__init__.py'
+            init_file.parent.mkdir(parents=True, exist_ok=True)
+            init_file.touch(exist_ok=True)
+    
+    def verify_structure(self, verbose: bool = True) -> bool:
+        """
+        Verify that the project structure exists.
+        
+        Args:
+            verbose: Print verification details
+            
+        Returns:
+            True if all required directories exist, False otherwise
+        """
+        missing = []
+        
+        for parent, subdirs in self.structure.items():
+            parent_path = self.root_dir / parent
+            if not parent_path.exists():
+                missing.append(str(parent_path))
+            
+            for subdir in subdirs:
+                subdir_path = parent_path / subdir
+                if not subdir_path.exists():
+                    missing.append(str(subdir_path))
+        
+        if verbose:
+            if missing:
+                print("❌ Missing directories:")
+                for path in missing:
+                    print(f"  - {path}")
+            else:
+                print("✅ All required directories exist")
+        
+        return len(missing) == 0
+    
+    def get_structure_summary(self) -> dict:
+        """
+        Get a summary of the directory structure.
+        
+        Returns:
+            Dictionary with directory counts and paths
+        """
+        summary = {
+            'root': str(self.root_dir),
+            'directories': {},
+            'total_dirs': 0
+        }
+        
+        for parent, subdirs in self.structure.items():
+            parent_path = self.root_dir / parent
+            summary['directories'][parent] = {
+                'exists': parent_path.exists(),
+                'subdirs': subdirs,
+                'path': str(parent_path)
+            }
+            summary['total_dirs'] += 1 + len(subdirs)
+        
+        return summary
+    
+    def create_default_config(self) -> None:
+        """Create a default configuration file."""
+        config = {
+            'data': {
+                'raw_dir': 'data/raw',
+                'processed_dir': 'data/processed',
+                'train_split': 0.8,
+                'val_split': 0.1,
+                'test_split': 0.1,
+                'image_size': 224,
+                'emotions': ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise']
+            },
+            'training': {
+                'batch_size': 64,
+                'epochs': 50,
+                'learning_rate': 0.001,
+                'random_seed': 42
+            },
+            'model': {
+                'name': 'BaselineCNN',
+                'num_classes': 7,
+                'input_channels': 1
+            }
+        }
+        
+        config_path = self.root_dir / 'configs' / 'config.yaml'
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        with open(config_path, 'w') as f:
+            yaml.dump(config, f, default_flow_style=False, sort_keys=False)
+        
+        print(f"✅ Created default config: {config_path}")
+
+
+if __name__ == '__main__':
+    # Example usage
+    manager = ProjectStructureManager()
+    
+    # Create structure with emotion classes
+    emotions = ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise']
+    manager.create_structure(emotions=emotions)
+    
+    # Verify structure
+    manager.verify_structure()
+    
+    # Create default config
+    manager.create_default_config()
+    
+    # Print summary
+    summary = manager.get_structure_summary()
+    print(f"\n📊 Structure Summary:")
+    print(f"Root: {summary['root']}")
+    print(f"Total directories: {summary['total_dirs']}")
