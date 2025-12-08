@@ -1,52 +1,56 @@
-"""
-Data loading module for FER2013 emotion recognition.
+"""Data loading and transformation utilities."""
 
-This module provides utilities for runtime data loading during training:
-- Transform pipelines (with and without augmentation)
-- DataLoader creation using ImageFolder
-- Class weight calculation for imbalanced datasets
-"""
+from .dataloader import (
+    create_dataloader,
+    create_dataloaders,
+    create_dataloaders_from_config,
+    calculate_class_weights,
+    get_class_counts,
+    print_dataloader_info
+)
 
 from .transforms import (
     get_train_transforms,
     get_val_transforms,
     get_test_transforms,
     get_inference_transforms,
+    get_baseline_train_transforms,
+    get_baseline_val_transforms,
     get_enhanced_train_transforms,
-    get_transforms_from_config,
-    DEFAULT_TRAIN_TRANSFORM,
-    DEFAULT_VAL_TRANSFORM,
-    DEFAULT_TEST_TRANSFORM,
-    DEFAULT_INFERENCE_TRANSFORM
+    get_enhanced_val_transforms,
+    IMAGENET_MEAN,
+    IMAGENET_STD
 )
 
-from .dataloader import (
-    create_dataloader,
-    create_dataloaders,
-    create_dataloaders_from_config,
-    get_class_counts,
-    calculate_class_weights,
-    print_dataloader_info
+from .augmentations import (
+    mixup_data,
+    cutmix_data,
+    mixup_criterion
 )
 
 __all__ = [
-    # Transforms
+    # Dataloader functions
+    'create_dataloader',
+    'create_dataloaders',
+    'create_dataloaders_from_config',
+    'calculate_class_weights',
+    'get_class_counts',
+    'print_dataloader_info',
+    
+    # Transform functions
     'get_train_transforms',
     'get_val_transforms',
     'get_test_transforms',
     'get_inference_transforms',
+    'get_baseline_train_transforms',
+    'get_baseline_val_transforms',
     'get_enhanced_train_transforms',
-    'get_transforms_from_config',
-    'DEFAULT_TRAIN_TRANSFORM',
-    'DEFAULT_VAL_TRANSFORM',
-    'DEFAULT_TEST_TRANSFORM',
-    'DEFAULT_INFERENCE_TRANSFORM',
+    'get_enhanced_val_transforms',
+    'IMAGENET_MEAN',
+    'IMAGENET_STD',
     
-    # DataLoaders
-    'create_dataloader',
-    'create_dataloaders',
-    'create_dataloaders_from_config',
-    'get_class_counts',
-    'calculate_class_weights',
-    'print_dataloader_info',
+    # Augmentation functions
+    'mixup_data',
+    'cutmix_data',
+    'mixup_criterion',
 ]
