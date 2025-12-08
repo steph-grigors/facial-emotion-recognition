@@ -49,11 +49,10 @@ data/augmented/
 *.zip
 *.tar.gz
 
+
 # Models & Checkpoints
 models/checkpoints/*.pth
 models/checkpoints/*.pt
-models/final/*.pth
-models/final/*.pt
 *.h5
 *.pkl
 *.joblib
