@@ -19,6 +19,7 @@ env/
 *.sublime-workspace
 
 # Jupyter Notebook
+notebooks/*
 .ipynb_checkpoints/
 *.ipynb_checkpoints/
 
@@ -33,10 +34,10 @@ data/augmented/*
 # CSV files and archives
 *.csv
 *.zip
-*.tar.gz
 
 # Models & Checkpoints (keep final models)
 models/checkpoints/
+models/best_model.pth
 *.pkl
 *.joblib
 
@@ -75,3 +76,5 @@ htmlcov/
 *.tmp
 temp/
 tmp/
+
+requirements-dev.txt
