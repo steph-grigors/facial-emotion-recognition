@@ -3,6 +3,13 @@ Baseline CNN architecture for facial emotion recognition.
 
 This module implements the baseline convolutional neural network that achieved
 65.81% accuracy on the FER2013 dataset.
+
+Architecture matches the working notebook:
+- Input: 224x224 RGB (3 channels)
+- 3 Convolutional blocks (32, 64, 128 filters)
+- Adaptive pooling to 7x7
+- 2 Fully connected layers
+- Output: 7 emotion classes
 """
 
 import torch
@@ -16,7 +23,8 @@ class BaselineCNN(nn.Module):
     
     Architecture:
         - 3 Convolutional blocks with increasing filters (32, 64, 128)
-        - Each block: Conv2d -> BatchNorm -> ReLU -> MaxPool -> Dropout
+        - Each block: Conv2d -> BatchNorm -> ReLU -> MaxPool
+        - Adaptive pooling to ensure 7x7 spatial dimensions
         - 2 Fully connected layers with dropout
         - Output: 7 emotion classes
     
@@ -31,77 +39,52 @@ class BaselineCNN(nn.Module):
         self.num_classes = num_classes
         self.dropout_rate = dropout_rate
         
-        # First convolutional block
-        self.conv1 = nn.Conv2d(1, 32, kernel_size=3, padding=1)
-        self.bn1 = nn.BatchNorm2d(32)
-        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.dropout1 = nn.Dropout2d(p=0.25)
+        # Feature extraction layers
+        self.features = nn.Sequential(
+            # Conv Block 1: 3 -> 32
+            nn.Conv2d(3, 32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            
+            # Conv Block 2: 32 -> 64
+            nn.Conv2d(32, 64, kernel_size=3, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            
+            # Conv Block 3: 64 -> 128
+            nn.Conv2d(64, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            
+            # Adaptive pooling to get consistent 7x7 output size
+            nn.AdaptiveAvgPool2d((7, 7))
+        )
         
-        # Second convolutional block
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
-        self.bn2 = nn.BatchNorm2d(64)
-        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.dropout2 = nn.Dropout2d(p=0.25)
-        
-        # Third convolutional block
-        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
-        self.bn3 = nn.BatchNorm2d(128)
-        self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.dropout3 = nn.Dropout2d(p=0.25)
-        
-        # Calculate the size after convolutions
-        # Input: 48x48 -> after pool1: 24x24 -> after pool2: 12x12 -> after pool3: 6x6
-        self.fc_input_size = 128 * 6 * 6  # 4608
-        
-        # Fully connected layers
-        self.fc1 = nn.Linear(self.fc_input_size, 256)
-        self.bn_fc1 = nn.BatchNorm1d(256)
-        self.dropout_fc1 = nn.Dropout(p=dropout_rate)
-        
-        self.fc2 = nn.Linear(256, num_classes)
+        # Classifier layers
+        # Input: 128 channels * 7 * 7 = 6272
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(128 * 7 * 7, 512),
+            nn.ReLU(),
+            nn.Dropout(dropout_rate),
+            nn.Linear(512, num_classes)
+        )
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Forward pass through the network.
         
         Args:
-            x (torch.Tensor): Input tensor of shape (batch_size, 1, 48, 48)
+            x (torch.Tensor): Input tensor of shape (batch_size, 3, 224, 224)
         
         Returns:
             torch.Tensor: Logits of shape (batch_size, num_classes)
         """
-        # First conv block
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = F.relu(x)
-        x = self.pool1(x)
-        x = self.dropout1(x)
-        
-        # Second conv block
-        x = self.conv2(x)
-        x = self.bn2(x)
-        x = F.relu(x)
-        x = self.pool2(x)
-        x = self.dropout2(x)
-        
-        # Third conv block
-        x = self.conv3(x)
-        x = self.bn3(x)
-        x = F.relu(x)
-        x = self.pool3(x)
-        x = self.dropout3(x)
-        
-        # Flatten
-        x = x.view(x.size(0), -1)
-        
-        # Fully connected layers
-        x = self.fc1(x)
-        x = self.bn_fc1(x)
-        x = F.relu(x)
-        x = self.dropout_fc1(x)
-        
-        x = self.fc2(x)
-        
+        x = self.features(x)
+        x = self.classifier(x)
         return x
     
     def get_model_info(self) -> dict:
@@ -120,8 +103,10 @@ class BaselineCNN(nn.Module):
             'dropout_rate': self.dropout_rate,
             'total_parameters': total_params,
             'trainable_parameters': trainable_params,
-            'input_size': '48x48',
-            'architecture': '3 Conv blocks + 2 FC layers'
+            'input_size': '224x224 RGB',
+            'input_channels': 3,
+            'architecture': '3 Conv blocks + Adaptive Pooling + 2 FC layers',
+            'fc_input_size': 128 * 7 * 7
         }
 
 
@@ -129,21 +114,35 @@ def test_baseline_cnn():
     """Test function to verify the model architecture."""
     model = BaselineCNN(num_classes=7)
     
-    # Create dummy input
+    # Create dummy input (224x224 RGB)
     batch_size = 4
-    dummy_input = torch.randn(batch_size, 1, 48, 48)
+    dummy_input = torch.randn(batch_size, 3, 224, 224)
     
     # Forward pass
     output = model(dummy_input)
     
-    print(f"Input shape: {dummy_input.shape}")
+    print("="*70)
+    print("BASELINE CNN ARCHITECTURE TEST")
+    print("="*70)
+    print(f"\nInput shape: {dummy_input.shape}")
     print(f"Output shape: {output.shape}")
     print(f"\nModel Info:")
     for key, value in model.get_model_info().items():
         print(f"  {key}: {value}")
     
+    # Test with different input sizes to verify adaptive pooling
+    print("\n" + "-"*70)
+    print("Testing Adaptive Pooling with different input sizes:")
+    print("-"*70)
+    
+    test_sizes = [224, 256, 300]
+    for size in test_sizes:
+        test_input = torch.randn(1, 3, size, size)
+        test_output = model(test_input)
+        print(f"  Input: {size}x{size} -> Output: {test_output.shape} ✓")
+    
     assert output.shape == (batch_size, 7), f"Expected output shape (4, 7), got {output.shape}"
-    print("\n✓ Model test passed!")
+    print("\n✅ All tests passed!")
 
 
 if __name__ == "__main__":

@@ -93,49 +93,6 @@ class TransferLearningModel(nn.Module):
         
         return model, classifier
     
-    def _load_efficientnet(self, model_name: str):
-        """Load EfficientNet model and modify for grayscale input."""
-        # Get the appropriate EfficientNet model
-        if model_name == 'efficientnet_b0':
-            model = models.efficientnet_b0(weights='IMAGENET1K_V1' if self.pretrained else None)
-        elif model_name == 'efficientnet_b1':
-            model = models.efficientnet_b1(weights='IMAGENET1K_V1' if self.pretrained else None)
-        elif model_name == 'efficientnet_b2':
-            model = models.efficientnet_b2(weights='IMAGENET1K_V1' if self.pretrained else None)
-        else:
-            raise ValueError(f"Unsupported EfficientNet variant: {model_name}")
-        
-        # Modify first conv layer for grayscale
-        original_conv = model.features[0][0]
-        model.features[0][0] = nn.Conv2d(
-            1, original_conv.out_channels,
-            kernel_size=original_conv.kernel_size,
-            stride=original_conv.stride,
-            padding=original_conv.padding,
-            bias=False
-        )
-        
-        # If pretrained, average the weights from 3 channels to 1
-        if self.pretrained:
-            with torch.no_grad():
-                model.features[0][0].weight = nn.Parameter(
-                    original_conv.weight.mean(dim=1, keepdim=True)
-                )
-        
-        # Replace classifier
-        num_features = model.classifier[1].in_features
-        classifier = nn.Sequential(
-            nn.Dropout(0.5),
-            nn.Linear(num_features, 512),
-            nn.ReLU(),
-            nn.Dropout(0.3),
-            nn.Linear(512, self.num_classes)
-        )
-        
-        # Remove original classifier
-        model.classifier = nn.Identity()
-        
-        return model, classifier
     
     def _freeze_base_model(self):
         """Freeze all parameters in the base model."""
