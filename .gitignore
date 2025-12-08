@@ -4,75 +4,60 @@ __pycache__/
 *$py.class
 *.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
 *.egg
-MANIFEST
-pip-log.txt
-pip-delete-this-directory.txt
 
 # Virtual Environments
 venv/
 env/
-ENV/
-env.bak/
-venv.bak/
 .venv/
 
-# PyCharm
+# IDEs
 .idea/
-
-# VSCode
 .vscode/
+*.sublime-project
+*.sublime-workspace
 
 # Jupyter Notebook
-.ipynb_checkpoints
+.ipynb_checkpoints/
 *.ipynb_checkpoints/
 
-# Data
-data/raw/
-data/processed/
-data/augmented/
+# Data - ignore contents but keep structure
+data/raw/*
+data/processed/*
+data/augmented/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/augmented/.gitkeep
+
+# CSV files and archives
 *.csv
 *.zip
 *.tar.gz
 
-
-# Models & Checkpoints
-models/checkpoints/*.pth
-models/checkpoints/*.pt
-*.h5
+# Models & Checkpoints (keep final models)
+models/checkpoints/
 *.pkl
 *.joblib
 
 # Experiments & Logs
-experiments/runs/
+experiments/
 logs/
 wandb/
 mlruns/
 *.log
 
-# Results
+# Results (keep some for README)
 results/plots/*.png
 results/plots/*.jpg
 results/metrics/*.json
 results/confusion_matrices/
+!results/demo_screenshot.png
 
 # Environment variables
 .env
 .env.local
+kaggle.json
 
 # OS
 .DS_Store
@@ -85,25 +70,8 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
-.tox/
-
-# Documentation
-docs/_build/
-site/
 
 # Temporary files
 *.tmp
 temp/
 tmp/
-
-# Large files (keep examples only)
-*.onnx
-*.tflite
-*.pb
-
-# Kaggle
-kaggle.json
-
-# IDE
-*.sublime-project
-*.sublime-workspace
