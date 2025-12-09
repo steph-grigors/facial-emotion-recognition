@@ -23,7 +23,7 @@ from src.inference import create_predictor
 # PAGE CONFIGURATION
 # ============================================================================
 st.set_page_config(
-    layout="centered",
+    layout="wide",
     initial_sidebar_state="expanded"
 )
 
@@ -544,15 +544,16 @@ def main():
             )
             
             
-            # Metrics - updated
+            # Metrics - updated with smaller font size
             col_a, col_b, col_c = st.columns(3)
             with col_a:
-                st.metric("Accuracy", f"{st.session_state.confidence:.1f}%")
+                st.markdown(f"<p style='font-size: 0.8rem; margin: 0;'><strong>Accuracy</strong><br>{st.session_state.confidence:.1f}%</p>", unsafe_allow_html=True)
             with col_b:
-                st.metric("Model", MODEL_TYPE.upper())
+                st.markdown(f"<p style='font-size: 0.8rem; margin: 0;'><strong>Model</strong><br>{MODEL_TYPE.upper()}</p>", unsafe_allow_html=True)
             with col_c:
                 device_icon = "⚡" if "cuda" in str(predictor.device) else "🖥️"
-                st.metric("Device", f"{device_icon} GPU" if "cuda" in str(predictor.device) else "🖥️ CPU")
+                device_text = f"{device_icon} GPU" if "cuda" in str(predictor.device) else "🖥️ CPU"
+                st.markdown(f"<p style='font-size: 0.8rem; margin: 0;'><strong>Device</strong><br>{device_text}</p>", unsafe_allow_html=True)
             
             # Chart
             st.markdown("### 📈 Probability Distribution")
