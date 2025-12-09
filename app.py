@@ -32,7 +32,7 @@ st.set_page_config(
 # ============================================================================
 
 # Display demo image at the top
-demo_image_path = Path("results/dataset-cover.png")
+demo_image_path = Path("assets/dataset-cover.png")
 if demo_image_path.exists():
     col1, col2, col3 = st.columns([0.333, 0.333, 0.333]) 
     with col2:
