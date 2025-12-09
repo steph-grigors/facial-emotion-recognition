@@ -7,7 +7,7 @@ A deep learning application for real-time facial emotion recognition using PyTor
 
 Deep learning-powered facial emotion recognition with an interactive web interface. Upload images or use your webcam to detect emotions in real-time.
 
-**Live Demo:** [Your Streamlit App URL]
+**Live Demo:** [https://cnn-facial-emotion-recognition.streamlit.app/]
 
 ## ✨ Features
 
