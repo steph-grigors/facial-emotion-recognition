@@ -24,6 +24,7 @@ notebooks/*
 *.ipynb_checkpoints/
 
 # Data - ignore contents but keep structure
+data/
 data/raw/*
 data/processed/*
 data/augmented/*
