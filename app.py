@@ -23,7 +23,7 @@ from src.inference import create_predictor
 # PAGE CONFIGURATION
 # ============================================================================
 st.set_page_config(
-    layout="wide",
+    layout="tight",
     initial_sidebar_state="expanded"
 )
 
