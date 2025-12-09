@@ -2,6 +2,12 @@
 torch>=2.1.0
 torchvision>=0.16.0
 
+# Web Application
+streamlit>=1.28.0
+
+# Computer Vision
+opencv-python>=4.8.0
+
 # Data Processing
 numpy>=1.24.0
 pandas>=2.1.0
@@ -20,6 +26,6 @@ pyyaml>=6.0.0
 # Progress Bars
 tqdm>=4.66.0
 
-# Jupyter Notebook Support (if running notebooks locally)
+# Jupyter Notebook Support (optional - for local development)
 ipykernel>=6.26.0
 notebook>=7.0.0
