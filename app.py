@@ -460,11 +460,11 @@ def main():
         
         st.markdown("## 💡 Best Practices")
         st.markdown("""
-        ✅ Well-lit, clear photos  
-        ✅ Face directly facing camera  
-        ✅ Exaggerated expressions work better  
-        ✅ Minimal background clutter  
-        """)
+        ✅ Well-lit, clear photos<br>
+        ✅ Face directly facing camera<br>
+        ✅ Exaggerated expressions work better<br>
+        ✅ Minimal background clutter
+        """, unsafe_allow_html=True)
         
         st.markdown("---")
         
@@ -475,7 +475,7 @@ def main():
         ResNet50
         OpenCV
         Streamlit
-        ```
+        ``` 
         """)
     
     # Main content - two columns
