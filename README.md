@@ -1,291 +1,155 @@
 # 🎭 Facial Emotion Recognition
 
-A deep learning project for recognizing facial emotions using state-of-the-art computer vision techniques. This project demonstrates end-to-end machine learning workflow from data preprocessing to model deployment.
+A deep learning application for real-time facial emotion recognition using PyTorch and Streamlit. Recognizes 7 emotions: Angry, Disgust, Fear, Happy, Neutral, Sad, and Surprise.
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Features](#features)
-- [Dataset](#dataset)
-- [Installation](#installation)
-- [Project Structure](#project-structure)
-- [Usage](#usage)
-- [Models](#models)
-- [Results](#results)
-- [Demo](#demo)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## 🎯 Overview
 
-This project implements multiple deep learning architectures for facial emotion recognition, including:
-- Custom CNN architectures
-- Transfer learning with ResNet50
-- EfficientNet models
-- Ensemble methods
+Deep learning-powered facial emotion recognition with an interactive web interface. Upload images or use your webcam to detect emotions in real-time.
 
-The system can classify facial expressions into 7 categories: **Angry, Disgust, Fear, Happy, Neutral, Sad, and Surprise**.
+**Live Demo:** [Your Streamlit App URL]
 
 ## ✨ Features
 
-- **Multiple Model Architectures**: Baseline CNN, ResNet50, EfficientNet, and ensemble models
-- **Advanced Training Techniques**:
-  - Transfer learning
-  - Mixed precision training
-  - Learning rate scheduling
-  - Early stopping
-  - Data augmentation
-- **Experiment Tracking**: Integration with TensorBoard, Weights & Biases, and MLflow
-- **Model Interpretability**: Grad-CAM visualizations for model explainability
-- **Production Ready**: REST API with FastAPI and interactive demo with Streamlit
-- **Comprehensive Testing**: Unit tests and integration tests
-- **Docker Support**: Containerized deployment
+- **Real-time Detection**: Webcam support for live emotion recognition
+- **Multiple Input Methods**: Upload images or use camera
+- **Confidence Scores**: View prediction probabilities for all emotions
+- **Interactive UI**: Clean, modern Streamlit interface
+- **Production Ready**: Trained ResNet50 model with 80%+ accuracy
 
-## 📊 Dataset
+## 🚀 Quick Start
 
-This project uses the [Facial Emotion Recognition Dataset](https://www.kaggle.com/datasets/fahadullaha/facial-emotion-recognition-dataset) from Kaggle.
-
-**Dataset Statistics:**
-- Number of classes: 7
-- Training images: TBD
-- Validation images: TBD
-- Test images: TBD
-- Image size: 224x224 (resized)
-
-## 🚀 Installation
-
-### Prerequisites
-
-- Python 3.8 or higher
-- CUDA-capable GPU (recommended)
-- Kaggle API credentials
-
-### Setup
-
-1. **Clone the repository**
+### Installation
 ```bash
-git clone https://github.com/yourusername/facial-emotion-recognition.git
+# Clone repository
+git clone https://github.com/steph-grigors/facial-emotion-recognition.git
 cd facial-emotion-recognition
-```
 
-2. **Create a virtual environment**
-```bash
+# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-3. **Install dependencies**
-```bash
-make install
-# or
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-4. **Set up environment variables**
+## 🛠️ Makefile Commands
+
+Quick reference for available commands:
+
+**Setup & Installation:**
 ```bash
-cp .env.example .env
-# Edit .env with your credentials
+make install          # Install dependencies
+make clean            # Clean generated files and caches
 ```
 
-5. **Create project structure**
+**Data Pipeline:**
 ```bash
-make setup
+make download-data    # Download FER dataset from Kaggle
+make preprocess       # Run complete data preprocessing pipeline
 ```
 
-6. **Download dataset**
+**Training:**
 ```bash
-make data
+make train            # Train Enhanced CNN (default)
+make train-baseline   # Train Baseline CNN
+make train-enhanced   # Train Enhanced CNN (ResNet50)
 ```
+
+**Inference & Testing:**
+```bash
+make inference        # Run quick inference on test image
+make inspect          # Inspect model architecture
+```
+
+**Web Application:**
+```bash
+make app              # Run Streamlit web app
+```
+Visit `http://localhost:8501` in your browser.
 
 ## 📁 Project Structure
-
 ```
 facial-emotion-recognition/
-├── data/                  # Dataset directory
-├── notebooks/            # Jupyter notebooks for EDA and experiments
-├── src/                  # Source code
-│   ├── data/            # Data loading and preprocessing
-│   ├── models/          # Model architectures
-│   ├── training/        # Training loops and utilities
-│   ├── utils/           # Helper functions
-│   └── inference/       # Inference and prediction
-├── configs/             # Configuration files
-├── scripts/             # Training and evaluation scripts
-├── tests/               # Unit tests
-├── app/                 # Web application (Streamlit & FastAPI)
-├── results/             # Model outputs and visualizations
-└── models/              # Saved models
+├── app.py                 # Streamlit application
+├── src/                   # Source code modules
+│   ├── models.py         # Model architectures
+│   ├── inference.py      # Prediction logic
+│   ├── data_loading.py   # Data utilities
+│   └── training.py       # Training orchestrator
+├── models/               # Trained model files
+│   └── final/
+│       └── best_model.pth
+├── scripts/              # Training & utility scripts
+├── data/                 # Dataset (not in repo)
+└── requirements.txt      # Dependencies
 ```
 
-For detailed structure, see [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)
+## 🧠 Model
 
-## 💻 Usage
-
-### Training
-
-**Train with default configuration:**
-```bash
-make train
-```
-
-**Train specific models:**
-```bash
-make train-baseline      # Baseline CNN
-make train-resnet        # ResNet50
-make train-efficientnet  # EfficientNet
-```
-
-**Train with custom config:**
-```bash
-python scripts/train.py --config configs/config.yaml --model-config configs/model_configs/resnet50.yaml
-```
-
-### Evaluation
-
-```bash
-make evaluate
-# or
-python scripts/evaluate.py --model-path models/final/best_model.pth
-```
-
-### Inference
-
-```bash
-python scripts/predict.py --image path/to/image.jpg --model-path models/final/best_model.pth
-```
-
-### Interactive Demo
-
-**Streamlit App:**
-```bash
-make streamlit
-# or
-streamlit run app/streamlit_app.py
-```
-
-**FastAPI Server:**
-```bash
-make api
-# or
-uvicorn app.api.main:app --reload
-```
-
-## 🧠 Models
-
-### Baseline CNN
-- Custom architecture with 4 convolutional blocks
-- ~2M parameters
-- Baseline for comparison
-
-### ResNet50 (Transfer Learning)
+**Architecture:** ResNet50 (Transfer Learning)
 - Pretrained on ImageNet
-- Fine-tuned on emotion dataset
-- ~23M parameters
+- Fine-tuned on FER dataset
+- Input: 128×128 RGB images
+- Output: 7 emotion classes
 
-### EfficientNet-B0
-- State-of-the-art efficient architecture
-- Best accuracy/efficiency trade-off
-- ~5M parameters
+**Performance:**
+- Validation Accuracy: ~80%
+- Real-time inference: <100ms per image
 
-### Ensemble
-- Combines predictions from multiple models
-- Improved robustness and accuracy
 
-## 📈 Results
+## 🎨 Usage Examples
 
-| Model | Val Accuracy | Test Accuracy | Parameters | Inference Time |
-|-------|--------------|---------------|------------|----------------|
-| Baseline CNN | TBD | TBD | 2M | TBD ms |
-| ResNet50 | TBD | TBD | 23M | TBD ms |
-| EfficientNet-B0 | TBD | TBD | 5M | TBD ms |
-| Ensemble | TBD | TBD | - | TBD ms |
+### Web Interface
+1. Launch the Streamlit app
+2. Choose input method (Upload or Camera)
+3. View emotion predictions with confidence scores
 
-*Results to be updated after training*
-
-### Confusion Matrix
-![Confusion Matrix](results/confusion_matrices/confusion_matrix.png)
-
-### Training Curves
-![Training Curves](results/plots/training_curves.png)
-
-## 🎨 Demo
-
-### Streamlit Interface
-[Add screenshot here]
-
-### API Usage
-
+### Programmatic Usage
 ```python
-import requests
+from src.inference import create_predictor
 
-# Predict emotion from image
-files = {'file': open('image.jpg', 'rb')}
-response = requests.post('http://localhost:8000/predict', files=files)
-print(response.json())
+# Load model
+predictor = create_predictor(
+    model_path='models/final/best_model.pth',
+    model_type='enhanced'
+)
+
+# Predict emotion
+emotion, confidence, probabilities = predictor.predict('image.jpg')
+print(f"Emotion: {emotion} ({confidence:.1f}%)")
 ```
 
-## 🛠️ Development
+## 📊 Dataset
 
-### Running Tests
-```bash
-make test
-```
+Uses the [Facial Emotion Recognition Dataset](https://www.kaggle.com/datasets/fahadullaha/facial-emotion-recognition-dataset/data?suggestionBundleId=1420) with 7 emotion categories:
+- Angry
+- Disgust
+- Fear
+- Happy
+- Neutral
+- Sad
+- Surprise
 
-### Code Quality
-```bash
-make lint    # Run linters
-make format  # Format code
-```
+## 🛠️ Requirements
 
-### Docker
+- Python 3.10+
+- PyTorch 2.0+
+- Streamlit 1.28+
+- OpenCV
+- Pillow
 
-**Build image:**
-```bash
-make docker-build
-```
+See `requirements.txt` for complete list.
 
-**Run container:**
-```bash
-make docker-run
-```
-
-## 📝 To-Do
-
-- [ ] Complete baseline model training
-- [ ] Implement ResNet50 transfer learning
-- [ ] Add EfficientNet experiments
-- [ ] Create ensemble model
-- [ ] Build Streamlit demo
-- [ ] Deploy FastAPI endpoint
-- [ ] Write comprehensive tests
-- [ ] Add model interpretation visualizations
-- [ ] Create Docker deployment
-- [ ] Write technical blog post
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Dataset from [Kaggle](https://www.kaggle.com/datasets/fahadullaha/facial-emotion-recognition-dataset)
-- Pretrained models from PyTorch
-- Inspired by recent advances in emotion recognition research
 
 ## 📧 Contact
 
-Your Name - your.email@example.com
+**Stéphan Grigorescu**
+- Portfolio: [stephan-gs.work](https://stephan-gs.work)
+- GitHub: [@steph-grigors](https://github.com/steph-grigors)
+- LinkedIn: [@stéphan-grs](https://www.linkedin.com/in/stéphan-grs)
 
-Project Link: [https://github.com/yourusername/facial-emotion-recognition](https://github.com/yourusername/facial-emotion-recognition)
 
 ---
 
-⭐ If you found this project helpful, please consider giving it a star!
+⭐ Star this repo if you find it useful!
