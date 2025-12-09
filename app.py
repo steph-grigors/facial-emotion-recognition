@@ -5,7 +5,7 @@ A sleek, modern dark-themed interface for real-time emotion detection.
 Features automatic face detection and image preprocessing.
 
 Usage:
-    streamlit run app_streamlit_dark.py
+    streamlit run app.py
 """
 
 import streamlit as st
@@ -248,40 +248,18 @@ st.markdown("""
     
     /* Text and labels */
     p, label, .stMarkdown {
-        color: #cbd5e0 !important;
+        color: #cbd5e0;
     }
     
-    /* Images - add glow and make responsive */
-    img {
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
-        width: 100%;
-        height: auto;
+    /* Links */
+    a {
+        color: #667eea;
+        text-decoration: none;
+        transition: color 0.3s ease;
     }
     
-    /* Hide streamlit branding */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    
-    /* Smooth animations */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .element-container {
-        animation: fadeIn 0.6s ease-out;
-    }
-    
-    /* Scrollbar */
-    ::-webkit-scrollbar {
-        width: 10px;
-        background: #0a0e27;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-        border-radius: 10px;
+    a:hover {
+        color: #764ba2;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -295,7 +273,7 @@ MODEL_TYPE = 'enhanced'
 
 EMOTION_EMOJIS = {
     'angry': '😠',
-    'disgust': '🤢',
+    'disgust': '🤢', 
     'fear': '😨',
     'happy': '😊',
     'neutral': '😐',
@@ -303,78 +281,78 @@ EMOTION_EMOJIS = {
     'surprise': '😲'
 }
 
-# Dark theme colors for emotions
 EMOTION_COLORS = {
     'angry': '#ef4444',
-    'disgust': '#8b5cf6',
-    'fear': '#475569',
+    'disgust': '#22c55e',
+    'fear': '#a855f7',
     'happy': '#fbbf24',
     'neutral': '#6b7280',
     'sad': '#3b82f6',
-    'surprise': '#14b8a6'
+    'surprise': '#f97316'
 }
 
 # ============================================================================
-# PREPROCESSING FUNCTIONS
+# IMAGE PROCESSING FUNCTIONS
 # ============================================================================
 
-def detect_and_crop_face(image):
-    """Detect face and crop with padding."""
-    try:
-        img_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-        gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
-        
-        cascade_path = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
-        face_cascade = cv2.CascadeClassifier(cascade_path)
-        
-        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-        
-        if len(faces) > 0:
-            largest_face = max(faces, key=lambda f: f[2] * f[3])
-            x, y, w, h = largest_face
-            
-            padding = int(w * 0.2)
-            x = max(0, x - padding)
-            y = max(0, y - padding)
-            w = min(img_cv.shape[1] - x, w + 2 * padding)
-            h = min(img_cv.shape[0] - y, h + 2 * padding)
-            
-            face_img = img_cv[y:y+h, x:x+w]
-            face_pil = Image.fromarray(cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB))
-            return face_pil, True
-        else:
-            return center_crop(image), False
-    except:
-        return center_crop(image), False
-
-def center_crop(image):
-    """Center crop to square."""
+def resize_image_for_display(image, max_width=400):
+    """Resize image for display while maintaining aspect ratio and quality."""
     width, height = image.size
-    size = min(width, height)
-    left = (width - size) // 2
-    top = (height - size) // 2
-    return image.crop((left, top, left + size, top + size))
-
-def enhance_image(image):
-    """Enhance image quality."""
-    if image.mode != 'RGB':
-        image = image.convert('RGB')
-    
-    enhancer = ImageEnhance.Contrast(image)
-    image = enhancer.enhance(1.2)
-    
-    enhancer = ImageEnhance.Sharpness(image)
-    image = enhancer.enhance(1.1)
-    
-    enhancer = ImageEnhance.Brightness(image)
-    image = enhancer.enhance(1.05)
-    
+    if width > max_width:
+        ratio = max_width / width
+        new_height = int(height * ratio)
+        return image.resize((max_width, new_height), Image.LANCZOS)
     return image
 
 def preprocess_for_model(image):
-    """Complete preprocessing pipeline."""
-    face_image, face_found = detect_and_crop_face(image)
-    enhanced_image = enhance_image(face_image)
+    """
+    Preprocess image with face detection and enhancement.
+    Returns processed PIL image and face detection status.
+    """
+    # Convert to numpy
+    img_np = np.array(image)
+    
+    # Convert to RGB if needed
+    if len(img_np.shape) == 2:
+        img_np = cv2.cvtColor(img_np, cv2.COLOR_GRAY2RGB)
+    elif img_np.shape[2] == 4:
+        img_np = cv2.cvtColor(img_np, cv2.COLOR_RGBA2RGB)
+    
+    # Face detection
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
+    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+    
+    face_found = len(faces) > 0
+    
+    if face_found:
+        # Get largest face
+        x, y, w, h = max(faces, key=lambda f: f[2] * f[3])
+        
+        # Add margin
+        margin = int(0.3 * max(w, h))
+        x1 = max(0, x - margin)
+        y1 = max(0, y - margin)
+        x2 = min(img_np.shape[1], x + w + margin)
+        y2 = min(img_np.shape[0], y + h + margin)
+        
+        # Crop face
+        face_img = img_np[y1:y2, x1:x2]
+    else:
+        # Use center crop as fallback
+        h, w = img_np.shape[:2]
+        size = min(h, w)
+        start_h = (h - size) // 2
+        start_w = (w - size) // 2
+        face_img = img_np[start_h:start_h+size, start_w:start_w+size]
+    
+    # Convert back to PIL
+    face_pil = Image.fromarray(face_img)
+    
+    # Enhance
+    enhancer = ImageEnhance.Contrast(face_pil)
+    enhanced_image = enhancer.enhance(1.2)
+    
     return enhanced_image, face_found
 
 # ============================================================================
@@ -507,7 +485,9 @@ def main():
                 image = Image.open(camera_image)
         
         if image:
-            st.image(image, caption="📷 Original Image")
+            # Resize for display
+            original_display = resize_image_for_display(image, max_width=500)
+            st.image(original_display, caption="📷 Original Image")
             
             # Big analyze button
             if st.button("🔍 ANALYZE EMOTION", key="analyze_btn"):
@@ -537,9 +517,10 @@ def main():
             else:
                 st.warning("⚠️ No face detected - using center crop")
             
-            # Show processed image where emotion box was
+            # Show processed image - resized for display
+            processed_display = resize_image_for_display(st.session_state.processed_image, max_width=400)
             st.image(
-                st.session_state.processed_image,
+                processed_display,
                 caption="🔧 Processed Image (Face-cropped & Enhanced)"
             )
             
@@ -547,13 +528,13 @@ def main():
             # Metrics - updated with smaller font size
             col_a, col_b, col_c = st.columns(3)
             with col_a:
-                st.markdown(f"<p style='font-size: 1.2rem; margin: 0;'><strong>Accuracy</strong><br>{st.session_state.confidence:.1f}%</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size: 0.8rem; margin: 0;'><strong>Accuracy</strong><br>{st.session_state.confidence:.1f}%</p>", unsafe_allow_html=True)
             with col_b:
-                st.markdown(f"<p style='font-size: 1.2rem; margin: 0;'><strong>Model</strong><br>{MODEL_TYPE.upper()}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size: 0.8rem; margin: 0;'><strong>Model</strong><br>{MODEL_TYPE.upper()}</p>", unsafe_allow_html=True)
             with col_c:
                 device_icon = "⚡" if "cuda" in str(predictor.device) else "🖥️"
                 device_text = f"{device_icon} GPU" if "cuda" in str(predictor.device) else "🖥️ CPU"
-                st.markdown(f"<p style='font-size: 1.2rem; margin: 0;'><strong>Device</strong><br>{device_text}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size: 0.8rem; margin: 0;'><strong>Device</strong><br>{device_text}</p>", unsafe_allow_html=True)
             
             # Chart
             st.markdown("### 📈 Probability Distribution")
@@ -616,7 +597,7 @@ def main():
     with st.expander("⚠️ Disclaimer"):
         st.caption("""
         This application is provided as-is for educational and demonstration purposes.
-        Emotion predictions are generated by a deep learning model trained on a rather small smaple of facial expressions
+        Emotion predictions are generated by a deep learning model trained on a rather small sample of facial expressions
         and may therefore not always be accurate.
         """)
 
