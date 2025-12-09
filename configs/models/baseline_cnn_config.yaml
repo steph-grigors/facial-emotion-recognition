@@ -1,0 +1,190 @@
+# ========================================================================
+# Baseline CNN Configuration
+# ========================================================================
+# Simple 3-layer CNN that achieved ~65% accuracy
+# Input: 224×224 RGB
+# Architecture: 3 Conv blocks + 2 FC layers
+# Parameters: ~3.3M
+# ========================================================================
+
+project:
+  name: "facial-emotion-recognition"
+  version: "1.0.0"
+  description: "Baseline CNN for emotion recognition"
+
+# ========================================================================
+# DATA CONFIGURATION
+# ========================================================================
+
+data:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  augmented_dir: "data/augmented"
+
+  # Dataset splits
+  train_split: 0.8
+  val_split: 0.1
+  test_split: 0.1
+
+  # Image specifications (matches BaselineCNN)
+  image_size: [224, 224]  # Height, Width
+  channels: 3  # RGB
+  normalize_mean: [0.485, 0.456, 0.406]  # ImageNet normalization
+  normalize_std: [0.229, 0.224, 0.225]
+
+  # Classes
+  classes:
+    - "angry"
+    - "disgust"
+    - "fear"
+    - "happy"
+    - "neutral"
+    - "sad"
+    - "surprise"
+  
+  num_classes: 7
+
+  # Data augmentation (moderate for baseline)
+  augmentation:
+    enabled: true
+    random_horizontal_flip: 0.5
+    random_rotation: 10
+    color_jitter:
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.1
+      hue: 0.05
+    random_affine:
+      degrees: 0
+      translate: [0.1, 0.1]
+      scale: [0.9, 1.1]
+    random_erasing: false
+
+# ========================================================================
+# MODEL CONFIGURATION
+# ========================================================================
+
+model:
+  architecture: "baseline_cnn"
+  num_classes: 7
+  dropout_rate: 0.5
+  
+  # Model will be created with:
+  # - 3 Conv blocks (32, 64, 128 filters)
+  # - Adaptive pooling to 7×7
+  # - 2 FC layers (6272 → 512 → 7)
+  # - Total parameters: ~3.3M
+
+# ========================================================================
+# TRAINING CONFIGURATION
+# ========================================================================
+
+training:
+  # Basic settings
+  epochs: 50
+  batch_size: 64
+  num_workers: 4
+  pin_memory: true
+
+  # Optimization
+  optimizer: "adam"
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  
+  # Learning rate scheduler
+  scheduler:
+    type: "reduce_on_plateau"
+    mode: "min"
+    patience: 5
+    factor: 0.5
+    min_lr: 0.000001
+
+  # Loss function
+  loss:
+    type: "cross_entropy"
+    # Optional: Use class weights for imbalanced dataset
+    # class_weights: "auto"  # Uncomment to compute from dataset
+
+  # Early stopping
+  early_stopping:
+    enabled: true
+    patience: 10
+    min_delta: 0.001
+    monitor: "val_loss"
+
+  # Gradient clipping
+  gradient_clipping:
+    enabled: true
+    max_norm: 1.0
+
+  # Mixed precision training (faster training)
+  mixed_precision: true
+
+  # Checkpointing
+  checkpoint:
+    save_best_only: true
+    save_frequency: 5  # Save every 5 epochs
+    monitor: "val_accuracy"
+    mode: "max"
+
+# ========================================================================
+# VALIDATION & TESTING
+# ========================================================================
+
+evaluation:
+  batch_size: 64
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1_score"
+    - "confusion_matrix"
+
+# ========================================================================
+# LOGGING
+# ========================================================================
+
+logging:
+  log_dir: "logs/baseline_cnn"
+  tensorboard: true
+  log_frequency: 10  # Log every 10 batches
+  save_confusion_matrix: true
+  save_plots: true
+
+# ========================================================================
+# PATHS
+# ========================================================================
+
+paths:
+  data_dir: "data/processed"
+  models_dir: "models"
+  checkpoints_dir: "models/checkpoints"
+  final_models_dir: "models/final"
+  results_dir: "results"
+  logs_dir: "logs"
+
+# ========================================================================
+# REPRODUCIBILITY
+# ========================================================================
+
+random_seed: 42
+deterministic: true
+
+# ========================================================================
+# HARDWARE
+# ========================================================================
+
+device: "cuda"  # Use "cpu" if no GPU available
+gpu_ids: [0]
+
+# ========================================================================
+# EXPECTED PERFORMANCE
+# ========================================================================
+
+# Expected results:
+# - Training accuracy: ~70-75%
+# - Validation accuracy: ~65-68%
+# - Test accuracy: ~65-67%
+# - Training time: ~15-20 min/epoch on GPU
+# - Total parameters: ~3.3M
+# - Model size: ~13 MB
