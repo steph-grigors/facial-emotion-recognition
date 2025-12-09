@@ -200,8 +200,7 @@ def evaluate_model_on_test(
     model_name: str = "model"
 ):
     """Evaluate model on test set."""
-    from trainer import evaluate_model
-    from metrics import compute_metrics, plot_confusion_matrix
+    from src.training import evaluate_model, compute_metrics, plot_confusion_matrix
     
     print("\n" + "="*70)
     print(f"EVALUATING {model_name} ON TEST SET")
