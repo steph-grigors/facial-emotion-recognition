@@ -547,13 +547,13 @@ def main():
             # Metrics - updated with smaller font size
             col_a, col_b, col_c = st.columns(3)
             with col_a:
-                st.markdown(f"<p style='font-size: 0.8rem; margin: 0;'><strong>Accuracy</strong><br>{st.session_state.confidence:.1f}%</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size: 1.2rem; margin: 0;'><strong>Accuracy</strong><br>{st.session_state.confidence:.1f}%</p>", unsafe_allow_html=True)
             with col_b:
-                st.markdown(f"<p style='font-size: 0.8rem; margin: 0;'><strong>Model</strong><br>{MODEL_TYPE.upper()}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size: 1.2rem; margin: 0;'><strong>Model</strong><br>{MODEL_TYPE.upper()}</p>", unsafe_allow_html=True)
             with col_c:
                 device_icon = "⚡" if "cuda" in str(predictor.device) else "🖥️"
                 device_text = f"{device_icon} GPU" if "cuda" in str(predictor.device) else "🖥️ CPU"
-                st.markdown(f"<p style='font-size: 0.8rem; margin: 0;'><strong>Device</strong><br>{device_text}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size: 1.2rem; margin: 0;'><strong>Device</strong><br>{device_text}</p>", unsafe_allow_html=True)
             
             # Chart
             st.markdown("### 📈 Probability Distribution")
